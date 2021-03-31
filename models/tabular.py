@@ -123,13 +123,19 @@ class Tabular:
 
     def generate(self, size=100):
         '''size can be list'''
-        raise NotImplementedError
+        x_fake, y_fake = self.generate_fake_samples(self.generator, self.latent_dim, size)
+        pyplot.scatter(x_fake[:, 0], x_fake[:, 1], color='blue')
+        pyplot.show()
+        return x_fake, y_fake
 
 
 if __name__ == '__main__':
 
     tabular = Tabular([])
     tabular.train()
+    tabular.generate()
+    tabular.generate()
+    tabular.generate()
 
 
 
