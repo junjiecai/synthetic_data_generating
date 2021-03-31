@@ -48,9 +48,6 @@ if __name__ == "__main__":
     event_data =xes_importer.apply(os.path.join("tests", "compressed_input_data", "09_a32f0n00.xes.gz"))
     pm = Process(event_data)
     pm.train()
-    p10=pm.generate(1000)
-    p20=pm.generate(20)
-    print(p10)
-    print(p20)
-    pm.evaluate(p10)
+    simulation_data=pm.generate(1000)
+    pm.evaluate(simulation_data)
 
