@@ -7,7 +7,8 @@ from numpy.random import randn
 from keras.models import Sequential
 from keras.layers import Dense
 from matplotlib import pyplot
-
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
 # 定义独立的判别器模型
 def define_discriminator(n_inputs=2):
