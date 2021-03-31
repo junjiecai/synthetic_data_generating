@@ -1,4 +1,3 @@
-# 在一个一维函数上训练一个生成对抗网络
 from numpy import hstack
 from numpy import zeros
 from numpy import ones
@@ -10,6 +9,7 @@ from matplotlib import pyplot
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
+# 在一个一维函数上训练一个生成对抗网络
 
 class Tabular:
     def __init__(self, data):
@@ -18,7 +18,7 @@ class Tabular:
         self.latent_dim = 5
         self.discriminator = self.define_discriminator()
         self.generator = self.define_generator()
-        self.gan_model = self.define_gan()
+        self.gan_model = self.define_gan(self.discriminator, self.generator)
 
     # 定义独立的判别器模型
     def define_discriminator(self, n_inputs=2):
@@ -37,15 +37,15 @@ class Tabular:
         return model
 
     # 定义合并的生成器和判别器模型，来更新生成器
-    def define_gan(self):
+    def define_gan(self, discriminator, generator):
         # 将判别器的权重设为不可训练
-        self.discriminator.trainable = False
+        discriminator.trainable = False
         # 连接它们
         model = Sequential()
         # 加入生成器
-        model.add(self.generator)
+        model.add(generator)
         # 加入判别器
-        model.add(self.discriminator)
+        model.add(discriminator)
         # 编译模型
         model.compile(loss='binary_crossentropy', optimizer='adam')
         return model
@@ -127,7 +127,7 @@ class Tabular:
 
 
 if __name__ == '__main__':
-    # 隐空间的维度
+
     tabular = Tabular([])
     tabular.train()
 
