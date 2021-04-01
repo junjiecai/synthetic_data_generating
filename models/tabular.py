@@ -1,8 +1,4 @@
-from numpy import hstack
-from numpy import zeros
-from numpy import ones
-from numpy.random import rand
-from numpy.random import randn
+import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense
 from matplotlib import pyplot
@@ -15,7 +11,7 @@ class Tabular:
     def __init__(self, data):
         self.data = data
         # 隐空间的维度
-        self.latent_dim = 5
+        self.latent_dim = 6
         self.discriminator = self.define_discriminator()
         self.generator = self.define_generator()
         self.gan_model = self.define_gan(self.discriminator, self.generator)
@@ -57,13 +53,13 @@ class Tabular:
         # 预测输出值
         X = generator.predict(x_input)
         # 创建类标签
-        y = zeros((n, 1))
+        y = np.zeros((n, 1))
         return X, y
 
     # 生成隐空间中的点作为生成器的输入
     def generate_latent_points(self, latent_dim, n):
         # 在隐空间中生成点
-        x_input = randn(latent_dim * n)
+        x_input = np.random.randn(latent_dim * n)
         # 为网络调整一个 batch 输入的维度大小
         x_input = x_input.reshape(n, latent_dim)
         return x_input
@@ -71,15 +67,15 @@ class Tabular:
     # 生成 n 个真实样本和类标签
     def generate_real_samples(self, n):
         # 生成 [-0.5, 0.5] 范围内的输入值
-        X1 = rand(n) - 0.5
+        X1 = np.random.rand(n) - 0.5
         # 生成输出值 X^2
         X2 = X1 * X1
         # 堆叠数组
         X1 = X1.reshape(n, 1)
         X2 = X2.reshape(n, 1)
-        X = hstack((X1, X2))
+        X = np.hstack((X1, X2))
         # 生成类标签
-        y = ones((n, 1))
+        y = np.ones((n, 1))
         return X, y
 
     # 评估判别器并且绘制真假点
@@ -102,6 +98,7 @@ class Tabular:
     def train(self, n_epochs=10000, n_batch=128, n_eval=2000):
         # 用一半的 batch 数量来训练判别器
         half_batch = int(n_batch / 2)
+
         # 手动遍历 epoch
         for i in range(n_epochs):
             # 准备真实样本
@@ -114,7 +111,7 @@ class Tabular:
             # 在隐空间中准备点作为生成器的输入
             x_gan = self.generate_latent_points(self.latent_dim, n_batch)
             # 为假样本创建反标签
-            y_gan = ones((n_batch, 1))
+            y_gan = np.ones((n_batch, 1))
             # 通过判别器的误差更新生成器
             self.gan_model.train_on_batch(x_gan, y_gan)
             # 为每 n_eval epoch 模型做评估
