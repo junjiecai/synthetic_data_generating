@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<log>
+	<trace>
+		<string key="concept:name" value="0" />
+		<event>
+			<string key="concept:name" value="7A" />
+			<date key="time:timestamp" value="1970-04-27T01:46:40" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="1" />
+		<event>
+			<string key="concept:name" value="7A" />
+			<date key="time:timestamp" value="1970-04-27T01:46:41" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="2" />
+		<event>
+			<string key="concept:name" value="7A" />
+			<date key="time:timestamp" value="1970-04-27T01:46:42" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="3" />
+		<event>
+			<string key="concept:name" value="7A" />
+			<date key="time:timestamp" value="1970-04-27T01:46:43" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="4" />
+		<event>
+			<string key="concept:name" value="7A" />
+			<date key="time:timestamp" value="1970-04-27T01:46:44" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="5" />
+		<event>
+			<string key="concept:name" value="7A" />
+			<date key="time:timestamp" value="1970-04-27T01:46:45" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="6" />
+		<event>
+			<string key="concept:name" value="7A" />
+			<date key="time:timestamp" value="1970-04-27T01:46:46" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="7" />
+		<event>
+			<string key="concept:name" value="7A" />
+			<date key="time:timestamp" value="1970-04-27T01:46:47" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="8" />
+		<event>
+			<string key="concept:name" value="7A" />
+			<date key="time:timestamp" value="1970-04-27T01:46:48" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="9" />
+		<event>
+			<string key="concept:name" value="7A" />
+			<date key="time:timestamp" value="1970-04-27T01:46:49" />
+		</event>
+	</trace>
+</log>
