@@ -126,7 +126,7 @@ class Tabular:
 
 if __name__ == '__main__':
 
-    data_size = 10000*10
+    data_size = 1000
     # 生成 [-0.5, 0.5] 范围内的输入值
     X1 = np.random.rand(data_size) - 0.5
     # 生成输出值 X^2
