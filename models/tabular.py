@@ -10,6 +10,8 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 class Tabular:
     def __init__(self, data):
         self.data = data
+        # 一维数据的个数
+        self.n_inputs = self.data.shape[1]
         # 隐空间的维度
         self.latent_dim = 6
         self.discriminator = self.define_discriminator()
@@ -17,19 +19,19 @@ class Tabular:
         self.gan_model = self.define_gan(self.discriminator, self.generator)
 
     # 定义独立的判别器模型
-    def define_discriminator(self, n_inputs=2):
+    def define_discriminator(self):
         model = Sequential()
-        model.add(Dense(25, activation='relu', kernel_initializer='he_uniform', input_dim=n_inputs))
+        model.add(Dense(25, activation='relu', kernel_initializer='he_uniform', input_dim=self.n_inputs))
         model.add(Dense(1, activation='sigmoid'))
         # 编译模型
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
         return model
 
     # 定义独立的生成器模型
-    def define_generator(self, n_outputs=2):
+    def define_generator(self):
         model = Sequential()
         model.add(Dense(15, activation='relu', kernel_initializer='he_uniform', input_dim=self.latent_dim))
-        model.add(Dense(n_outputs, activation='linear'))
+        model.add(Dense(self.n_inputs, activation='linear'))
         return model
 
     # 定义合并的生成器和判别器模型，来更新生成器
@@ -66,14 +68,10 @@ class Tabular:
 
     # 生成 n 个真实样本和类标签
     def generate_real_samples(self, n):
-        # 生成 [-0.5, 0.5] 范围内的输入值
-        X1 = np.random.rand(n) - 0.5
-        # 生成输出值 X^2
-        X2 = X1 * X1
-        # 堆叠数组
-        X1 = X1.reshape(n, 1)
-        X2 = X2.reshape(n, 1)
-        X = np.hstack((X1, X2))
+        assert len(self.data) > n
+        # 从样本集中随机选取n个样本
+        idx = np.random.choice(range(len(self.data)), n, replace=False)
+        X = self.data[idx, :]
         # 生成类标签
         y = np.ones((n, 1))
         return X, y
@@ -128,7 +126,18 @@ class Tabular:
 
 if __name__ == '__main__':
 
-    tabular = Tabular([])
+    data_size = 10000*10
+    # 生成 [-0.5, 0.5] 范围内的输入值
+    X1 = np.random.rand(data_size) - 0.5
+    # 生成输出值 X^2
+    X2 = np.square(X1)
+    # 堆叠数组
+    X1 = X1.reshape(data_size, 1)
+    X2 = X2.reshape(data_size, 1)
+    X = np.hstack((X1, X2))
+    # print("X", X)
+
+    tabular = Tabular(X)
     tabular.train()
     tabular.generate()
     tabular.generate()
