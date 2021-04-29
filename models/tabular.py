@@ -2,6 +2,8 @@ import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense
 from matplotlib import pyplot
+import keras.backend as K
+
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
@@ -13,24 +15,29 @@ class Tabular:
         # 一维数据的个数
         self.n_inputs = self.data.shape[1]
         # 隐空间的维度
-        self.latent_dim = 6
+        self.latent_dim = 10
         self.discriminator = self.define_discriminator()
         self.generator = self.define_generator()
         self.gan_model = self.define_gan(self.discriminator, self.generator)
+
+    def wasserstein_loss(self, y_true, y_pred):
+        return K.mean(y_true * y_pred)
 
     # 定义独立的判别器模型
     def define_discriminator(self):
         model = Sequential()
         model.add(Dense(25, activation='relu', kernel_initializer='he_uniform', input_dim=self.n_inputs))
+        model.add(Dense(20, activation='relu', kernel_initializer='he_uniform'))
         model.add(Dense(1, activation='sigmoid'))
         # 编译模型
-        model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+        model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
         return model
 
     # 定义独立的生成器模型
     def define_generator(self):
         model = Sequential()
-        model.add(Dense(15, activation='relu', kernel_initializer='he_uniform', input_dim=self.latent_dim))
+        model.add(Dense(25, activation='relu', kernel_initializer='he_uniform', input_dim=self.latent_dim))
+        model.add(Dense(20, activation='relu', kernel_initializer='he_uniform'))
         model.add(Dense(self.n_inputs, activation='linear'))
         return model
 
@@ -45,7 +52,7 @@ class Tabular:
         # 加入判别器
         model.add(discriminator)
         # 编译模型
-        model.compile(loss='binary_crossentropy', optimizer='adam')
+        model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
         return model
 
     # 用生成器生成 n 个假样本和类标签
@@ -96,8 +103,8 @@ class Tabular:
     def train(self, n_epochs=10000, n_batch=128, n_eval=2000):
         # 用一半的 batch 数量来训练判别器
         half_batch = int(n_batch / 2)
-
         # 手动遍历 epoch
+
         for i in range(n_epochs):
             # 准备真实样本
             x_real, y_real = self.generate_real_samples(half_batch)
@@ -135,7 +142,7 @@ if __name__ == '__main__':
     X1 = X1.reshape(data_size, 1)
     X2 = X2.reshape(data_size, 1)
     X = np.hstack((X1, X2))
-    # print("X", X)
+    #print("X", X)
 
     tabular = Tabular(X)
     tabular.train()
