@@ -3,6 +3,8 @@ from keras.models import Sequential
 from keras.layers import Dense
 from matplotlib import pyplot
 import keras.backend as K
+import scipy.stats
+import pandas as pd
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
@@ -26,7 +28,7 @@ class Tabular:
     def define_discriminator(self):
         model = Sequential()
         model.add(Dense(25, activation='relu', kernel_initializer='he_uniform', input_dim=self.n_inputs))
-        model.add(Dense(20, activation='relu', kernel_initializer='he_uniform'))
+        model.add(Dense(30, activation='relu', kernel_initializer='he_uniform'))
         model.add(Dense(1, activation='sigmoid'))
         # 编译模型
         model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
@@ -36,7 +38,7 @@ class Tabular:
     def define_generator(self):
         model = Sequential()
         model.add(Dense(25, activation='relu', kernel_initializer='he_uniform', input_dim=self.latent_dim))
-        model.add(Dense(20, activation='relu', kernel_initializer='he_uniform'))
+        model.add(Dense(30, activation='relu', kernel_initializer='he_uniform'))
         model.add(Dense(self.n_inputs, activation='linear'))
         return model
 
@@ -129,10 +131,22 @@ class Tabular:
         pyplot.show()
         return x_fake, y_fake
 
+def js_divergence(p, q):
+    M = (p+q)/2
+    return 0.5*scipy.stats.entropy(p, M)+0.5*scipy.stats.entropy(q, M)
+
+def JS_div(arr1, arr2, num_bins):
+    max0 = max(np.max(arr1), np.max(arr2))
+    min0 = min(np.min(arr1), np.min(arr2))
+    bins = np.linspace(min0-1e-4, max0-1e-4, num=num_bins)
+    PDF1 = pd.cut(arr1, bins).value_counts() / len(arr1)
+    PDF2 = pd.cut(arr2, bins).value_counts() / len(arr2)
+    return js_divergence(PDF1.values, PDF2.values)
+
 
 if __name__ == '__main__':
 
-    data_size = 1000
+    data_size = 200
     # 生成 [-0.5, 0.5] 范围内的输入值
     X1 = np.random.rand(data_size) - 0.5
     # 生成输出值 X^2
@@ -145,9 +159,8 @@ if __name__ == '__main__':
 
     tabular = Tabular(X)
     tabular.train()
-    tabular.generate()
-    tabular.generate()
-    tabular.generate()
+    X_pre, _ = tabular.generate(size=data_size)
+    print("js", JS_div(X, X_pre, num_bins=10))
 
 
 
