@@ -4,3 +4,5 @@ numpy
 pandas
 scipy
 tensorflow==2.2.0
+pm4py
+graphviz
