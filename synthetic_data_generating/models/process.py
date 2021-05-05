@@ -62,7 +62,6 @@ class Process:
         '''n is number of patients'''
         #simulated_log = simulator.apply(self.net, self.initial_marking,self.final_marking, variant=simulator.Variants.BASIC_PLAYOUT, parameters={simulator.Variants.BASIC_PLAYOUT.value.Parameters.CASE_ID_KEY: n})
         simulated_log = simulator.apply(self.net, self.initial_marking,self.final_marking, variant=simulator.Variants.BASIC_PLAYOUT, parameters={simulator.Variants.BASIC_PLAYOUT.value.Parameters.NO_TRACES: n})
-
         # from pm4py.objects.process_tree import semantics
         # simulated_log = semantics.generate_log(self.tree, no_traces=100)
         # print(len(simulated_log))
@@ -111,6 +110,10 @@ class Process:
         print("Start activities: {}\nEnd activities: {}".format(start_activities, end_activities))
         fitness = replay_fitness_evaluator.apply(log, self.net, self.initial_marking, self.final_marking, variant=replay_fitness_evaluator.Variants.TOKEN_BASED)
         print(fitness)
+    def foot_print_dataframe(self, df_log):
+        df = pm4py.format_dataframe(df_log, case_id='id', activity_key='event_type', timestamp_key='time')
+        df =log_conversion.apply(df, variant=log_conversion.TO_EVENT_LOG)
+        self.foot_print(df)
 
     def foot_print(self,log):
         from pm4py.algo.discovery.footprints import algorithm as fp_discovery
