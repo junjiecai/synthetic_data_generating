@@ -129,11 +129,14 @@ class Tabular:
         x_fake, y_fake = self.generate_fake_samples(self.generator, self.latent_dim, size)
         df = pd.DataFrame(x_fake)
         df.columns = self.columns
-        # df = df.round({'c': 0, 'd': 0})
-        # df["c"] = "c" + df["c"].astype('int').astype('str')
-        # df["d"] = "d" + df["d"].astype('int').astype('str')
-
         return df
+
+    # dataFrame, js散度评估，只可以处理数值型
+    def js_evaluate(self, data1, data2):
+        dataNp1 = np.array(data1)
+        dataNp2 = np.array(data2)
+        return js_div(dataNp1.flatten(), dataNp2.flatten(), num_bins=20)
+
 
 def js_divergence(p, q):
     M = (p+q)/2
@@ -160,10 +163,8 @@ if __name__ == '__main__':
     X2 = X2.reshape(data_size, 1)
     X = np.hstack((X1, X2))
     # print("X", X)
-
-    tabular = Tabular(X)
-    tabular.train()
-    X_pre = tabular.generate(size=data_size)
+    js = js_div(X1.flatten(), X.flatten(), num_bins=20)
+    print("js", js)
     # print("js", js_div(X, X_pre, num_bins=10))
 
 
