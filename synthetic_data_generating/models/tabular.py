@@ -1,7 +1,6 @@
 import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense
-from matplotlib import pyplot
 import keras.backend as K
 import scipy.stats
 import pandas as pd
@@ -12,7 +11,10 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 class Tabular:
     def __init__(self, data):
-        self.data = data
+        data["c"] = data["c"].replace({'c': ''}, regex=True)
+        data["d"] = data["d"].replace({'d': ''}, regex=True)
+        self.data = np.array(data)
+        self.columns = data.columns
         # 一维数据的个数
         self.n_inputs = self.data.shape[1]
         # 隐空间的维度
@@ -76,7 +78,7 @@ class Tabular:
 
     # 生成 n 个真实样本和类标签
     def generate_real_samples(self, n):
-        assert len(self.data) > n
+        assert len(self.data) >= n
         # 从样本集中随机选取n个样本
         idx = np.random.choice(range(len(self.data)), n, replace=False)
         X = self.data[idx, :]
@@ -85,7 +87,7 @@ class Tabular:
         return X, y
 
     # 评估判别器并且绘制真假点
-    def summarize_performance(self, epoch, n=100):
+    def summarize_performance(self, epoch, n=50):
         # 准备真实样本
         x_real, y_real = self.generate_real_samples(n)
         # 在真实样本上评估判别器
@@ -96,10 +98,10 @@ class Tabular:
         _, acc_fake = self.discriminator.evaluate(x_fake, y_fake, verbose=0)
         # 总结判别器性能
         print(epoch, acc_real, acc_fake)
-        # 绘制真假数据的散点图
-        pyplot.scatter(x_real[:, 0], x_real[:, 1], color='red')
-        pyplot.scatter(x_fake[:, 0], x_fake[:, 1], color='blue')
-        pyplot.show()
+        # # 绘制真假数据的散点图
+        # pyplot.scatter(x_real[:, 0], x_real[:, 1], color='red')
+        # pyplot.scatter(x_fake[:, 0], x_fake[:, 1], color='blue')
+        # pyplot.show()
 
     def train(self, n_epochs=10000, n_batch=128, n_eval=2000):
         # 用一半的 batch 数量来训练判别器
@@ -127,15 +129,18 @@ class Tabular:
     def generate(self, size=100):
         '''size can be list'''
         x_fake, y_fake = self.generate_fake_samples(self.generator, self.latent_dim, size)
-        pyplot.scatter(x_fake[:, 0], x_fake[:, 1], color='blue')
-        pyplot.show()
-        return x_fake, y_fake
+        df = pd.DataFrame(x_fake)
+        df.columns = self.columns
+        df = df.round({'c': 0, 'd': 0})
+        df["c"] = "c" + df["c"].astype('int').astype('str')
+        df["d"] = "d" + df["d"].astype('int').astype('str')
+        return df
 
 def js_divergence(p, q):
     M = (p+q)/2
     return 0.5*scipy.stats.entropy(p, M)+0.5*scipy.stats.entropy(q, M)
 
-def JS_div(arr1, arr2, num_bins):
+def js_div(arr1, arr2, num_bins):
     max0 = max(np.max(arr1), np.max(arr2))
     min0 = min(np.min(arr1), np.min(arr2))
     bins = np.linspace(min0-1e-4, max0-1e-4, num=num_bins)
@@ -159,8 +164,8 @@ if __name__ == '__main__':
 
     tabular = Tabular(X)
     tabular.train()
-    X_pre, _ = tabular.generate(size=data_size)
-    print("js", JS_div(X, X_pre, num_bins=10))
+    X_pre = tabular.generate(size=data_size)
+    # print("js", js_div(X, X_pre, num_bins=10))
 
 
 
