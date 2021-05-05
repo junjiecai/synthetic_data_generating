@@ -7,40 +7,15 @@ import pandas as pd
 import pathlib
 base_path = pathlib.Path(__file__).parent.absolute()
 
+# todo:
+# id for process
+
 class Generator:
     def __init__(self, one_to_one_path, path_to_many_path):
-        self._one_to_one_data = self._load_one_to_one_data(one_to_one_path)
-        self._one_to_many_data = self._load_one_to_many_data(path_to_many_path)
+        self._one_to_one_data = self._load_data(one_to_one_path)
+        self._one_to_many_data = self._load_data(path_to_many_path)
 
-    def _load_one_to_one_data(self, one_to_one_path):
-        # files = os.listdir(one_to_one_path)
-        # files = filter(lambda f: f.endswith('.xlsx'), files)
-        #
-        # mapping = {}
-        # data = []
-        # for filename in files:
-        #
-        #     df = pd.read_excel(join(one_to_one_path, filename))
-        #     data.append(df)
-        #
-        #     columns = list(df.columns)
-        #
-        #     filename_base = filename.split('.')[0]
-        #     mapping.update(dict(zip(columns, [filename_base]*len(columns))))
-        #
-        # df_all = pd.concat(data)
-        #
-        # return df_all, mapping
-
-        return self._load_data(one_to_one_path)
-
-
-    def _load_one_to_many_data(self, one_to_many_path):
-        path = one_to_many_path
-
-        return self._load_data(path)
-
-    def _load_data(self, path, index_cols=None):
+    def _load_data(self, path, index_cols=None) -> dict:
         files = os.listdir(path)
         files = filter(lambda f: f.endswith('.xlsx'), files)
         mapping = {}
@@ -89,26 +64,25 @@ class Generator:
     def split_tabular_data(self, generated_combined_tabular_data):
         new_data = {}
         for filename_base, df in self._one_to_one_data.items():
-            new_data[filename_base] = generated_combined_tabular_data[list(df.drop('id', axis=1).columns)]
+            new_data[filename_base] = generated_combined_tabular_data[list(df.columns)]
 
         return new_data
-    #
+
     def generate_event_data(self, event_logs, event_property_data):
         new_data = {}
         for event, df in event_property_data.items():
-            sub_event_logs = event_logs.loc[event_logs['event_type']==event]
+            sub_event_logs = event_logs.loc[event_logs['event_type'] == event]
             df.index = sub_event_logs.index
-            new_data[event] = df
+            new_data[event] = pd.concat([sub_event_logs, df], axis=1)
 
         return new_data
 
-
     def generate(self, n=100):
         generated_combined_tabular_data = self.tabular_generator.generate(n)
+        generated_combined_tabular_data['id'] = list(range(n))
         generated_tabular_data = self.split_tabular_data(generated_combined_tabular_data)
 
         event_logs = self.event_log_generator.generate(n)
-        print(event_logs.head())
 
         event_property_data = {}
         for event, generator in self.properties_data_generators.items():
@@ -124,4 +98,3 @@ if __name__ == '__main__':
     g = Generator(join(base_path, 'one_to_one'), join(base_path, 'one_to_many'))
     g.train()
     a, b = g.generate(10)
-    print(1)
