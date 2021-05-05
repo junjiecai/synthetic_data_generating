@@ -1,5 +1,6 @@
 import os
 import pm4py
+from pm4py import util
 from pm4py.objects.log.importer.xes import importer as xes_importer
 from pm4py.algo.discovery.alpha import algorithm as alpha_miner
 from pm4py.algo.simulation.playout import simulator
@@ -12,12 +13,13 @@ from pm4py.streaming.importer.csv import importer as streaming_csv_importer
 from pm4py.algo.evaluation.replay_fitness import evaluator as replay_fitness_evaluator
 from pm4py.objects.conversion.log import converter as log_conversion
 import pandas as pd
-from pm4py.objects.log.util import dataframe_utils
 from pm4py.objects.log.exporter.xes import exporter as xes_exporter
 from pm4py.objects.log.util import sampling, sorting, index_attribute
 from pm4py.algo.discovery.inductive import algorithm as inductive_miner
 from pm4py.algo.simulation.montecarlo import simulator as montecarlo_simulation
 from pm4py.visualization.process_tree import visualizer as pt_visualizer
+from pm4py.objects.log.util import dataframe_utils
+from pm4py.util import constants, xes_constants
 import os
 
 class Process:
@@ -40,7 +42,7 @@ class Process:
         #from pm4py.visualization.heuristics_net import visualizer as hn_visualizer
         #gviz = hn_visualizer.apply(heu_net)
         #hn_visualizer.view(gviz)
-        self.tree = inductive_miner.apply(self.event_data)
+        self.tree = inductive_miner.apply_tree(self.event_data)
         self.net, self.initial_marking, self.final_marking=inductive_miner.apply(self.event_data)
         #from pm4py.objects.conversion.process_tree import converter as pt_converter
         #self.net, self.initial_marking, self.final_marking = pt_converter.apply(self.tree, variant=pt_converter.Variants.TO_PETRI_NET)
@@ -85,6 +87,9 @@ class Process:
         print(res["median_cases_ex_time"])
         print(res["total_cases_time"])
         '''
+        simulated_log = log_conversion.apply(simulated_log, variant=log_conversion.TO_DATA_FRAME)
+        simulated_log = simulated_log.rename(columns={constants.CASE_CONCEPT_NAME:"id", xes_constants.DEFAULT_NAME_KEY:"event_type",
+                             xes_constants.DEFAULT_TIMESTAMP_KEY:"time"})
         #from pm4py.algo.simulation.playout import simulator
         #simulated_log = simulator.apply(self.net, self.initial_marking,self.final_marking, variant=simulator.Variants.STOCHASTIC_PLAYOUT)
         return simulated_log
@@ -152,21 +157,13 @@ def importExportCSVtoXES(inputdata,outputdata):
         dummy_variable = "dummy_value"
         df = pd.read_csv(os.path.join("tests", "input_data",  inputdata))
         df = pm4py.format_dataframe(df, case_id='case', activity_key='activity', timestamp_key='timestamp')
-        pm4py.filter_attribute_values
+        
         #df = dataframe_utils.convert_timestamp_columns_in_df(df)
         df["case:concept:name"]=df["case:concept:name"].astype("int64")
         #df["ActivityID"]=df["ActivityID"].astype("object")
         
         df.info()
-        event_log = log_conversion.apply(df, variant=log_conversion.TO_EVENT_STREAM)
-        event_log = sorting.sort_timestamp(event_log)
-        event_log = sampling.sample(event_log)
-        event_log = index_attribute.insert_event_index_as_event_attribute(event_log)
-        log = log_conversion.apply(event_log)
-        log = sorting.sort_timestamp(log)
-        log = sampling.sample(log)
-        log = index_attribute.insert_trace_index_as_event_attribute(log)
-        xes_exporter.apply(log, os.path.join("tests", "input_data",  outputdata))
+        
         #log_imported_after_export = xes_importer.apply(os.path.join("tests", "input_data",  outputdata))
         #os.remove(os.path.join("tests", "input_data",  outputdata))
 def importCSV(inputpath):
@@ -186,9 +183,9 @@ def importCSV(inputpath):
 
 if __name__ == "__main__":
     #event_data = importCSV("running-example.csv")
-    importExportCSVtoXES("event_e.csv","event_e.xes")
+    #importExportCSVtoXES("event_e.csv","event_e.xes")
     #print(os.path.abspath(os.path.join( "tests", "input_data", "running-example.xes")))
-    
+
     event_data =xes_importer.apply(os.path.join("tests", "input_data", "event_e.xes"))
 
     pm = Process(event_data)
