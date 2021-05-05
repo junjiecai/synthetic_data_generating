@@ -114,8 +114,8 @@ class Tabular:
             # 准备假样本
             x_fake, y_fake = self.generate_fake_samples(self.generator, self.latent_dim, half_batch)
             # 更新判别器
-            self.discriminator.train_on_batch(x_real, y_real)
-            self.discriminator.train_on_batch(x_fake, y_fake)
+            self.discriminator.train_on_batch(x_real.astype(np.float32), y_real.astype(np.float32))
+            self.discriminator.train_on_batch(x_fake.astype(np.float32), y_fake.astype(np.float32))
             # 在隐空间中准备点作为生成器的输入
             x_gan = self.generate_latent_points(self.latent_dim, n_batch)
             # 为假样本创建反标签
