@@ -70,54 +70,58 @@ class Generator:
     # 
     # 
     def train(self):
-        # combined_tabular_data = self._combine_one_to_one_data().set_index('id')
-        # self.tabular_generator = Tabular(combined_tabular_data)
-        # self.tabular_generator.train()
+        combined_tabular_data = self._combine_one_to_one_data().set_index('id')
+        self.tabular_generator = Tabular(combined_tabular_data)
+        self.tabular_generator.train(n_epochs=10)
     # 
         event_logs_data = self._combine_event_logs()
         event_log_generator = Process(event_logs_data)
         event_log_generator.train()
         self.event_log_generator = event_log_generator
-    #     self.event_log_generator = event_log_generator
     # 
-    #     self.properties_data_generators = {}
-    #     for event, data in self.one_to_many_data.items():
-    #         generator = Tabular(data)
-    #         generator.train()
-    #         properties_data_generators[event] = generator
-    # 
+        self.properties_data_generators = {}
+        for event, data in self._one_to_many_data.items():
+            generator = Tabular(data.drop(['id', 'time'], axis=1))
+            generator.train(n_epochs=10)
+            self.properties_data_generators[event] = generator
+            print("Tabular generator for {} is trained".format(event))
+
     def split_tabular_data(self, generated_combined_tabular_data):
         new_data = {}
-        for filename_base, df in self._one_to_many_data.items():
-            new_data[filename_base] = generated_combined_tabular_data[['id']+list(df.columns)]
+        for filename_base, df in self._one_to_one_data.items():
+            new_data[filename_base] = generated_combined_tabular_data[list(df.drop('id', axis=1).columns)]
+
+        return new_data
+    #
+    def generate_event_data(self, event_logs, event_property_data):
+        new_data = {}
+        for event, df in event_property_data.items():
+            sub_event_logs = event_logs.loc[event_logs['event_type']==event]
+            df.index = sub_event_logs.index
+            new_data[event] = df
 
         return new_data
 
-    # 
-    # def get_patient_event_size(self):
-    #     raise NotImplementedError
-    # 
-    # def generate_event_data(self):
-    #     raise NotImplementedError
-    # 
+
     def generate(self, n=100):
-        # generated_combined_tabular_data = self.tabular_generator.generate(n)
-        # generated_tabular_data = self.split_tabular_data(generated_combined_tabular_data)
+        generated_combined_tabular_data = self.tabular_generator.generate(n)
+        generated_tabular_data = self.split_tabular_data(generated_combined_tabular_data)
 
         event_logs = self.event_log_generator.generate(n)
-        # patient_event_size = self.get_patient_event_size()
-        #
-        # event_property_data = {}
-        # for event, generator in self.properties_data_generators.items():
-        #     event_property_data[event] = generator.generate(patient_event_size)
-        #
-        # event_data = self.generate_event_data(event_logs, event_property_data)
+        print(event_logs.head())
 
-        return event_logs
+        event_property_data = {}
+        for event, generator in self.properties_data_generators.items():
+            record_n = (event_logs['event_type'] == event).sum()
+            event_property_data[event] = generator.generate(record_n)
+
+        event_data = self.generate_event_data(event_logs, event_property_data)
+
+        return generated_tabular_data, event_data
 
 
 if __name__ == '__main__':
     g = Generator(join(base_path, 'one_to_one'), join(base_path, 'one_to_many'))
     g.train()
-    g.generate(10)
+    a, b = g.generate(10)
     print(1)

@@ -11,8 +11,6 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 class Tabular:
     def __init__(self, data):
-        data["c"] = data["c"].replace({'c': ''}, regex=True)
-        data["d"] = data["d"].replace({'d': ''}, regex=True)
         self.data = np.array(data)
         self.columns = data.columns
         # 一维数据的个数
@@ -66,7 +64,7 @@ class Tabular:
         X = generator.predict(x_input)
         # 创建类标签
         y = np.zeros((n, 1))
-        return X, y
+        return X.astype(np.float32), y.astype(np.float32)
 
     # 生成隐空间中的点作为生成器的输入
     def generate_latent_points(self, latent_dim, n):
@@ -84,7 +82,7 @@ class Tabular:
         X = self.data[idx, :]
         # 生成类标签
         y = np.ones((n, 1))
-        return X, y
+        return X.astype(np.float32), y.astype(np.float32)
 
     # 评估判别器并且绘制真假点
     def summarize_performance(self, epoch, n=50):
@@ -114,8 +112,8 @@ class Tabular:
             # 准备假样本
             x_fake, y_fake = self.generate_fake_samples(self.generator, self.latent_dim, half_batch)
             # 更新判别器
-            self.discriminator.train_on_batch(x_real.astype(np.float32), y_real.astype(np.float32))
-            self.discriminator.train_on_batch(x_fake.astype(np.float32), y_fake.astype(np.float32))
+            self.discriminator.train_on_batch(x_real, y_real)
+            self.discriminator.train_on_batch(x_fake, y_fake)
             # 在隐空间中准备点作为生成器的输入
             x_gan = self.generate_latent_points(self.latent_dim, n_batch)
             # 为假样本创建反标签
@@ -131,9 +129,10 @@ class Tabular:
         x_fake, y_fake = self.generate_fake_samples(self.generator, self.latent_dim, size)
         df = pd.DataFrame(x_fake)
         df.columns = self.columns
-        df = df.round({'c': 0, 'd': 0})
-        df["c"] = "c" + df["c"].astype('int').astype('str')
-        df["d"] = "d" + df["d"].astype('int').astype('str')
+        # df = df.round({'c': 0, 'd': 0})
+        # df["c"] = "c" + df["c"].astype('int').astype('str')
+        # df["d"] = "d" + df["d"].astype('int').astype('str')
+
         return df
 
 def js_divergence(p, q):
