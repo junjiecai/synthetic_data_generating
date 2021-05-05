@@ -98,3 +98,4 @@ if __name__ == '__main__':
     g = Generator(join(base_path, 'one_to_one'), join(base_path, 'one_to_many'))
     g.train()
     a, b = g.generate(10)
+    print(1)
