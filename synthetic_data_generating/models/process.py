@@ -11,6 +11,7 @@ from pm4py.util import constants
 from pm4py.statistics.traces.log import case_statistics
 from pm4py.streaming.importer.csv import importer as streaming_csv_importer
 from pm4py.algo.evaluation.replay_fitness import evaluator as replay_fitness_evaluator
+from pm4py.algo.evaluation.precision import evaluator as precision_evaluator
 from pm4py.objects.conversion.log import converter as log_conversion
 import pandas as pd
 from pm4py.objects.log.exporter.xes import exporter as xes_exporter
@@ -38,18 +39,8 @@ class Process:
     def train(self):
         #Alpha Miner
         
-        self.net, self.initial_marking, self.final_marking = heuristics_miner.apply(self.event_data, parameters={heuristics_miner.Variants.CLASSIC.value.Parameters.DEPENDENCY_THRESH: 0.99})
-        #self.net, self.initial_marking, self.final_marking = alpha_miner.apply(self.event_data)
-        from pm4py.visualization.petrinet import visualizer as petrinet_visualizer
-        gviz = petrinet_visualizer.apply(self.net, self.initial_marking, self.final_marking)
-        petrinet_visualizer.view(gviz)
-        petrinet_visualizer.save(gviz,"heuristics_miner.png")
         self.net, self.initial_marking, self.final_marking = inductive_miner.apply(self.event_data)
-        gviz = petrinet_visualizer.apply(self.net, self.initial_marking, self.final_marking)
-        petrinet_visualizer.view(gviz)
-        petrinet_visualizer.save(gviz,"inductive_miner.png")
-
-        self.draw_inductive_frequency(self.net, self.initial_marking, self.final_marking,self.event_data,"inductive_frequency_pn.png")
+        self.draw_inductive_frequency(self.net, self.initial_marking, self.final_marking,self.event_data,"image/inductive_frequency_pn.png")
         
         #print(self.net)
         #Heuristics Miner
@@ -72,8 +63,7 @@ class Process:
         
         #gviz = dfg_visualizer.apply(self.dfg,variant=dfg_visualizer.Variants.FREQUENCY)
         #dfg_visualizer.view(gviz)
-        self.draw_inductive_frequency(self.net, self.initial_marking,self.final_marking,self.event_data,"inductive_frequency.png")
-
+      
         
         #from pm4py.statistics.start_activities.log import get as start_activities
         #from pm4py.statistics.end_activities.log import get as end_activities
@@ -93,7 +83,7 @@ class Process:
         '''n is number of patients'''
         #simulated_log = simulator.apply(self.net, self.initial_marking,self.final_marking, variant=simulator.Variants.BASIC_PLAYOUT, parameters={simulator.Variants.BASIC_PLAYOUT.value.Parameters.CASE_ID_KEY: n})
         simulated_log = simulator.apply(self.net, self.initial_marking,self.final_marking, variant=simulator.Variants.BASIC_PLAYOUT, parameters={simulator.Variants.BASIC_PLAYOUT.value.Parameters.NO_TRACES: n})
-        self.draw_inductive_frequency(self.net, self.initial_marking,self.final_marking,simulated_log,"simulated_inductive_frequency.png")
+        self.draw_inductive_frequency(self.net, self.initial_marking,self.final_marking,simulated_log,"image/simulated_inductive_frequency.png")
         
 
         # from pm4py.objects.process_tree import semantics
@@ -132,7 +122,7 @@ class Process:
         #print(res["median_cases_ex_time"])
         print(res["total_cases_time"])
         net, initial_marking, final_marking = inductive_miner.apply(simulated_log)
-        self.draw_inductive_frequency(net, initial_marking, final_marking,simulated_log,"simulated_dfg_inductive_frequency.png")
+        self.draw_inductive_frequency(net, initial_marking, final_marking,simulated_log,"image/simulated_dfg_inductive_frequency.png")
         
         simulated_log = log_conversion.apply(simulated_log, variant=log_conversion.TO_DATA_FRAME)
         simulated_log = simulated_log.rename(columns={constants.CASE_CONCEPT_NAME:"id", xes_constants.DEFAULT_NAME_KEY:"event_type",
@@ -179,14 +169,14 @@ class Process:
         from pm4py.visualization.footprints import visualizer as fp_visualizer
         gviz = fp_visualizer.apply(fp_log, fp_simulation_data_log, parameters={fp_visualizer.Variants.COMPARISON.value.Parameters.FORMAT: "png"})
         fp_visualizer.view(gviz)
-        fp_visualizer.save(gviz,"matrix.png")
-        # from pm4py.algo.conformance.footprints import algorithm as fp_conformance
+        fp_visualizer.save(gviz,"image/matrix.png")
+        
+        from pm4py.algo.conformance.footprints import algorithm as fp_conformance
+        conf_result = fp_conformance.apply(fp_log, fp_simulation_data_log, variant=fp_conformance.Variants.LOG_EXTENSIVE)
+        from pm4py.algo.conformance.footprints.util import evaluation
 
-        # conf_result = fp_conformance.apply(fp_log, fp_simulation_data_log, variant=fp_conformance.Variants.LOG_EXTENSIVE)
-        # from pm4py.algo.conformance.footprints.util import evaluation
-
-        # fitness = evaluation.fp_fitness(fp_log, fp_simulation_data_log, conf_result)
-        # precision = evaluation.fp_precision(fp_log, fp_simulation_data_log)
+        fitness = evaluation.fp_fitness(fp_log, fp_simulation_data_log, conf_result)
+        precision = evaluation.fp_precision(fp_log, fp_simulation_data_log)
         # print("precision:{},fitness:{},conf_result:{}".format(precision,fitness,conf_result))
         #end foot print evaluate
         #ALIGNMENT_BASED evaluate
@@ -195,6 +185,28 @@ class Process:
         fitness = replay_fitness_evaluator.apply(log,self.net, self.initial_marking, self.final_marking, variant=replay_fitness_evaluator.Variants.ALIGNMENT_BASED)
         print("ALIGNMENT_BASED.fitness:{}".format(fitness))
         #end ALIGNMENT_BASED evaluate
+
+        #Precision
+        prec = precision_evaluator.apply(log,self.net, self.initial_marking, self.final_marking, variant=precision_evaluator.Variants.ETCONFORMANCE_TOKEN)
+        print("ETCONFORMANCE_TOKEN.prec:{}".format(prec))
+        prec = precision_evaluator.apply(log,self.net, self.initial_marking, self.final_marking, variant=precision_evaluator.Variants.ALIGN_ETCONFORMANCE)
+        print("ALIGN_ETCONFORMANCE.prec:{}".format(prec))
+        #end Precision
+        #Generalization
+        from pm4py.algo.evaluation.generalization import evaluator as generalization_evaluator
+        gen = generalization_evaluator.apply(log, self.net, self.initial_marking, self.final_marking)
+        #end Generalization
+        #Simplicity
+        from pm4py.algo.evaluation.simplicity import evaluator as simplicity_evaluator
+        simp = simplicity_evaluator.apply(self.net)
+        #end Simplicity
+        
+        #Earth Mover Distance
+        from pm4py.objects.log.importer.xes import importer as xes_importer
+        from pm4py.statistics.variants.log import get as variants_module
+        language = variants_module.get_language(log)
+        print(language)
+        #end Earth Mover Distance
 
 if __name__ == "__main__":
     #event_data = importCSV("running-example.csv")

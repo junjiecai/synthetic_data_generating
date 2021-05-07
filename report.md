@@ -83,7 +83,7 @@ Clinical events have loops we choose **Inductive** miner algorithms.
 
 Process models modeled using Petri nets have a well-defined semantic: a process execution starts from the places included in the initial marking and finishes at the places included in the final marking. 
 
-![inductive_frequency_pn](inductive_frequency_pn.png)
+![inductive_frequency_pn](image/inductive_frequency_pn.png)
 
 Petri nets Include frequency 
 
@@ -91,17 +91,19 @@ Petri nets Include frequency
 
 Directly-Follows Graphs, are introduced. Directly-Follows graphs are graphs where the nodes represent the events/activities in the log and directed edges are present between nodes if there is at least a trace in the log where the source event/activity is followed by the target event/activity. On top of these directed edges, it is easy to represent metrics like frequency and performance
 
-![DFG_PERFORMANCE](DFG_PERFORMANCE.png
+![DFG_PERFORMANCE](image/DFG_PERFORMANCE.png)
 
-![DFG_FREQUENCY](DFG_FREQUENCY.png)
+![DFG_FREQUENCY](image/DFG_FREQUENCY.png)
 
 ​										frequency DFG
 
-![inductive_frequency](inductive_frequency.png)
+
 
 ###### Process tree:
 
 A process tree is a process model and a compact abstract representation of a block-structured workflow net: a rooted tree in which leaf nodes are labeled with activities, and all other nodes are labeled with operators (from now on called operator nodes). All nodes have a unique identifier to distinguish leaves having the same label. Furthermore, process trees are sound by definition, therefore, correctness of the process model is guaranteed.
+
+
 
 #### Simulation
 
@@ -109,7 +111,7 @@ A process tree is a process model and a compact abstract representation of a blo
 
 A playout of a Petri net takes as input a Petri net along with an initial marking, and returns a list of process executions that are allowed from the process model.
 
-![simulated Petri Net](simulated_inductive_frequency.png)
+![simulated Petri Net](image/simulated_inductive_frequency.png)
 
 ##### Monte Carlo Simulation
 
@@ -121,7 +123,7 @@ A time-related simulation permits to know how probable is that a process executi
 
 A playout operation on a directly-follows graph is useful to retrieve the traces that are allowed from the directly-follows graph. In this case, a trace is a set of activities visited in the DFG from the start node to the end node. We can assign a probability to each trace (assuming that the DFG represents a Markov chain).
 
-![simulated dfg](simulated_dfg_inductive_frequency.png)
+![simulated dfg](image/simulated_dfg_inductive_frequency.png)
 
 #### Extensive Playout of a Process Tree
 
@@ -131,7 +133,13 @@ An extensive playout operation permits to obtain entire path of the process mode
 
 ### Process evaluation
 
+#### Replay Fitness
 
+The two variants of replay fitness are implemented as **Variants.TOKEN_BASED** and **Variants.ALIGNMENT_BASED** respectively.
+
+### Precision
+
+The two variants, ETConformance and Align-ETConformance, are available as **Variants.ETCONFORMANCE_TOKEN** and **Variants.ALIGN_ETCONFORMANCE** in the implementation respectively.
 
 #### Event properties
 
