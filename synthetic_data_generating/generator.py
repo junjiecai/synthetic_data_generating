@@ -108,5 +108,6 @@ if __name__ == '__main__':
 
     g = Generator(join(base_path, '../demo/one_to_one'), join(base_path, '../demo/one_to_many'), config)
     g.train()
-    a, b = g.generate(10)
+    a, b = g.generate(10000)
+    
     print(1)

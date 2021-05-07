@@ -29,6 +29,7 @@ import os
 
 class Process:
     def __init__(self, event_data):
+        self.file = open("log/log.txt","a+")
         df = pm4py.format_dataframe(event_data, case_id='id', activity_key='event_type', timestamp_key='time')
         #df = dataframe_utils.convert_timestamp_columns_in_df(df)
         df["case:concept:name"]=df["case:concept:name"].astype("int64")
@@ -49,9 +50,9 @@ class Process:
         #
         #
         #self.tree = inductive_miner.apply_tree(self.event_data)
-        #tree = inductive_miner.apply_tree(self.event_data)
-        #gviz = pt_visualizer.apply(tree)
-        #pt_visualizer.view(gviz)
+        tree = inductive_miner.apply_tree(self.event_data)
+        gviz = pt_visualizer.apply(tree)
+        pt_visualizer.save(gviz,"image/process_tree.png")
         
         #self.net, self.initial_marking, self.final_marking=inductive_miner.apply(self.event_data)
         
@@ -84,7 +85,7 @@ class Process:
         #simulated_log = simulator.apply(self.net, self.initial_marking,self.final_marking, variant=simulator.Variants.BASIC_PLAYOUT, parameters={simulator.Variants.BASIC_PLAYOUT.value.Parameters.CASE_ID_KEY: n})
         simulated_log = simulator.apply(self.net, self.initial_marking,self.final_marking, variant=simulator.Variants.BASIC_PLAYOUT, parameters={simulator.Variants.BASIC_PLAYOUT.value.Parameters.NO_TRACES: n})
         self.draw_inductive_frequency(self.net, self.initial_marking,self.final_marking,simulated_log,"image/simulated_inductive_frequency.png")
-        
+        self.foot_print(simulated_log)
 
         # from pm4py.objects.process_tree import semantics
         # simulated_log = semantics.generate_log(self.tree, no_traces=100)
@@ -96,7 +97,6 @@ class Process:
         # parameters[montecarlo_simulation.Variants.PETRI_SEMAPH_FIFO.value.Parameters.PARAM_MAX_THREAD_EXECUTION_TIME] = 5
         # simulated_log, res = montecarlo_simulation.apply(self.event_data, self.net, self.initial_marking,self.final_marking, parameters=parameters)
         log = self.event_data
-        #log = xes_importer.apply(os.path.join("demo", "input_data", "running-example.xes"))
         dfg = dfg_discovery.apply(log, variant=dfg_discovery.Variants.FREQUENCY)
 
         sa = start_activities.get_start_activities(log)
@@ -112,18 +112,14 @@ class Process:
         from pm4py.algo.conformance.tokenreplay.algorithm import Variants
 
         parameters = {}
-        #parameters[montecarlo_simulation.Variants.PETRI_SEMAPH_FIFO.value.Parameters.PARAM_ENABLE_DIAGNOSTICS] = False
         parameters[montecarlo_simulation.Variants.PETRI_SEMAPH_FIFO.value.Parameters.PARAM_NUM_SIMULATIONS] = n
-        #parameters[montecarlo_simulation.Variants.PETRI_SEMAPH_FIFO.value.Parameters.PARAM_MAX_THREAD_EXECUTION_TIME] = 5
-        # perform the Montecarlo simulation with the arrival rate specified (the simulation lasts 5 secs)
-        parameters[montecarlo_simulation.Variants.PETRI_SEMAPH_FIFO.value.Parameters.PARAM_CASE_ARRIVAL_RATIO] = 10800
+        parameters[montecarlo_simulation.Variants.PETRI_SEMAPH_FIFO.value.Parameters.PARAM_CASE_ARRIVAL_RATIO] = ratio
         simulated_log, res = montecarlo_simulation.apply(log,net, im, fm , parameters=parameters)
-        #print("\n(Montecarlo - Petri net) case arrival ratio specified by the user")
-        #print(res["median_cases_ex_time"])
         print(res["total_cases_time"])
         net, initial_marking, final_marking = inductive_miner.apply(simulated_log)
         self.draw_inductive_frequency(net, initial_marking, final_marking,simulated_log,"image/simulated_dfg_inductive_frequency.png")
-        
+        self.foot_print(simulated_log)
+
         simulated_log = log_conversion.apply(simulated_log, variant=log_conversion.TO_DATA_FRAME)
         simulated_log = simulated_log.rename(columns={constants.CASE_CONCEPT_NAME:"id", xes_constants.DEFAULT_NAME_KEY:"event_type",
                              xes_constants.DEFAULT_TIMESTAMP_KEY:"time"})
@@ -149,9 +145,9 @@ class Process:
         #pm4py.view_dfg(dfg, start_activities, end_activities)
         start_activities = pm4py.get_start_activities(log)
         end_activities = pm4py.get_end_activities(log)
-        print("Start activities: {}\nEnd activities: {}".format(start_activities, end_activities))
+        self.file.write("Start activities: {}\nEnd activities: {}\n".format(start_activities, end_activities))
         fitness = replay_fitness_evaluator.apply(log, self.net, self.initial_marking, self.final_marking, variant=replay_fitness_evaluator.Variants.TOKEN_BASED)
-        print(fitness)
+        self.file.write("fitness:{}\n".format(fitness))
 
     def foot_print_dataframe(self, df_log):
         df = pm4py.format_dataframe(df_log, case_id='id', activity_key='event_type', timestamp_key='time')
@@ -177,36 +173,37 @@ class Process:
 
         fitness = evaluation.fp_fitness(fp_log, fp_simulation_data_log, conf_result)
         precision = evaluation.fp_precision(fp_log, fp_simulation_data_log)
-        # print("precision:{},fitness:{},conf_result:{}".format(precision,fitness,conf_result))
+        self.file.write("fp:precision:{},fitness:{},conf_result:{}\n".format(precision,fitness,conf_result))
         #end foot print evaluate
         #ALIGNMENT_BASED evaluate
         fitness = replay_fitness_evaluator.apply(log,self.net, self.initial_marking, self.final_marking, variant=replay_fitness_evaluator.Variants.TOKEN_BASED)
-        print("TOKEN_BASED.fitness:{}".format(fitness))
-        fitness = replay_fitness_evaluator.apply(log,self.net, self.initial_marking, self.final_marking, variant=replay_fitness_evaluator.Variants.ALIGNMENT_BASED)
-        print("ALIGNMENT_BASED.fitness:{}".format(fitness))
+        self.file.write("TOKEN_BASED.fitness:{}\n".format(fitness))
         #end ALIGNMENT_BASED evaluate
 
         #Precision
         prec = precision_evaluator.apply(log,self.net, self.initial_marking, self.final_marking, variant=precision_evaluator.Variants.ETCONFORMANCE_TOKEN)
-        print("ETCONFORMANCE_TOKEN.prec:{}".format(prec))
-        prec = precision_evaluator.apply(log,self.net, self.initial_marking, self.final_marking, variant=precision_evaluator.Variants.ALIGN_ETCONFORMANCE)
-        print("ALIGN_ETCONFORMANCE.prec:{}".format(prec))
+        self.file.write("prec:{}\n".format(prec))
         #end Precision
         #Generalization
         from pm4py.algo.evaluation.generalization import evaluator as generalization_evaluator
         gen = generalization_evaluator.apply(log, self.net, self.initial_marking, self.final_marking)
+        self.file.write("gen:{}\n".format(gen))
         #end Generalization
         #Simplicity
         from pm4py.algo.evaluation.simplicity import evaluator as simplicity_evaluator
         simp = simplicity_evaluator.apply(self.net)
+        self.file.write("simp:{}\n".format(simp))
         #end Simplicity
         
         #Earth Mover Distance
         from pm4py.objects.log.importer.xes import importer as xes_importer
         from pm4py.statistics.variants.log import get as variants_module
+        language = variants_module.get_language(self.event_data)
+        self.file.write("source:{}\n".format(language))
         language = variants_module.get_language(log)
-        print(language)
+        self.file.write("simulation:{}\n".format(language))
         #end Earth Mover Distance
+        self.file.flush()
 
 if __name__ == "__main__":
     #event_data = importCSV("running-example.csv")

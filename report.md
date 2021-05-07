@@ -54,7 +54,7 @@ Data for patients can be divived into two primary categories.
 * The similarity between the generated data and the training data can be evaluated through js divergence. The value is between 0 and 1, and the exact same calculation result is 0. There are int type data and float type data in the training data.  
 * For the generation of category data, data pre-processing and post-processing are required. For example, A, B, and C need to be converted into 1, 2, and 3 first, and then trained with GAN to convert the generated data into A, B and C according to Mapping relations.
 
-![image](gan_network.png)
+![image](image/gan_network.png)
 
 ### Clinical events data
 
@@ -70,13 +70,15 @@ Process Discovery algorithms want to find a suitable process model that describe
 
 In the following, we made up an overview to visualize the advantages and disadvantages of the mining algorithms.
 
-| Alpha                                               | Alpha+                                              | Heuristic                        | Inductive                          |
-| --------------------------------------------------- | --------------------------------------------------- | -------------------------------- | ---------------------------------- |
-| Cannot handle loops of length one and length two    | Can handle loops of length one and length two       | Takes frequency into account     | Can handle invisible tasks         |
-| Invisible and duplicated tasks cannot be discovered | Invisible and duplicated tasks cannot be discovered | Detects short loops              | Model is sound                     |
-| Discovered model might not be sound                 | Discovered model might not be sound                 | Does not guarantee a sound model | Most used process mining algorithm |
+| Alpha                                               | Alpha+                                              | Heuristic                        | Inductive                              |
+| --------------------------------------------------- | --------------------------------------------------- | -------------------------------- | -------------------------------------- |
+| Cannot handle loops of length one and length two    | Can handle loops of length one and length two       | Takes frequency into account     | Can handle invisible tasks             |
+| Invisible and duplicated tasks cannot be discovered | Invisible and duplicated tasks cannot be discovered | Detects short loops              | **Model is sound**                     |
+| Discovered model might not be sound                 | Discovered model might not be sound                 | Does not guarantee a sound model | **Most used process mining algorithm** |
 
-Clinical events have loops we choose **Inductive** miner algorithms.
+There may be multiple cycles in clinical events. In order to ensure the reliability of the algorithm, we choose to the **inductive** miner algorithm.
+
+
 
 ##### Process models structures
 
@@ -86,7 +88,7 @@ Process models modeled using Petri nets have a well-defined semantic: a process 
 
 ![inductive_frequency_pn](image/inductive_frequency_pn.png)
 
-Petri nets Include frequency 
+Petri nets with frequency 
 
 ###### Directly-Follows Graphs：
 
@@ -102,11 +104,11 @@ Directly-Follows Graphs, are introduced. Directly-Follows graphs are graphs wher
 
 ###### Process tree:
 
-A process tree is a process model and a compact abstract representation of a block-structured workflow net: a rooted tree in which leaf nodes are labeled with activities, and all other nodes are labeled with operators (from now on called operator nodes). All nodes have a unique identifier to distinguish leaves having the same label. Furthermore, process trees are sound by definition, therefore, correctness of the process model is guaranteed.
+A process tree is a process model and a compact abstract representation of a block-structured workflow net: a rooted tree in which leaf nodes are labeled with activities, and all other nodes are labeled with operators. All nodes have a unique identifier to distinguish leaves having the same label. Furthermore, process trees are sound by definition, therefore, the correctness of the process model is guaranteed.
 
+![process_tree](image/process_tree.png)
 
-
-#### Simulation
+#### 	
 
 ##### Playout of a Petri Net
 
@@ -114,17 +116,17 @@ A playout of a Petri net takes as input a Petri net along with an initial markin
 
 ![simulated Petri Net](image/simulated_inductive_frequency.png)
 
+Playout of a Petri Net event log of Petri Net with frequency
+
 ##### Monte Carlo Simulation
 
 A time-related simulation permits to know how probable is that a process execution is terminated after a given amount of time. This leads to a better estimation of Service Level Agreements, or a better identification of the process instances that are most likely to have an high throughput time. All this starts from a performance DFG.
 
-
-
-#### Playout of a DFG
-
-A playout operation on a directly-follows graph is useful to retrieve the traces that are allowed from the directly-follows graph. In this case, a trace is a set of activities visited in the DFG from the start node to the end node. We can assign a probability to each trace (assuming that the DFG represents a Markov chain).
-
 ![simulated dfg](image/simulated_dfg_inductive_frequency.png)
+
+Monte Carlo Simulation event log of Petri Net with frequency
+
+
 
 #### Extensive Playout of a Process Tree
 
@@ -132,15 +134,27 @@ An extensive playout operation permits to obtain entire path of the process mode
 
 
 
-### Process evaluation
+#### Process evaluation
 
-#### Replay Fitness
+**process discovery: The importance of fitness, precision, generalization and simplicity**
 
-The two variants of replay fitness are implemented as **Variants.TOKEN_BASED** and **Variants.ALIGNMENT_BASED** respectively.
+| Method                 | Precision | Fitness | Generalization | Simplicity |
+| ---------------------- | --------- | ------- | -------------- | ---------- |
+| Playout of a Petri Net | 0.9497    | 1.0     | 0.9831         | 0.6875     |
+| Monte Carlo Simulation | 0.9831    | 1.0     | 0.9356         | 0.6875     |
 
-### Precision
+**Replay evaluation**
 
-The two variants, ETConformance and Align-ETConformance, are available as **Variants.ETCONFORMANCE_TOKEN** and **Variants.ALIGN_ETCONFORMANCE** in the implementation respectively.
+#### Footprints
+
+![matrix](image/matrix.png)
+
+| Method                 | Precision | Fitness |
+| ---------------------- | --------- | ------- |
+| Playout of a Petri Net | 1.0       | 1.0     |
+| Monte Carlo Simulation | 1.0       | 0.99995 |
+
+Footprints function evaluation
 
 #### Event properties
 
@@ -170,7 +184,7 @@ Given event type, event properties can be combined into one tabular data table a
 
 ### Plan Framework
 
-![image](plan.jpg)  
+![image](image/plan.jpg)  
 
 # Reference
 
