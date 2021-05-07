@@ -48,6 +48,9 @@ class Process:
         gviz = petrinet_visualizer.apply(self.net, self.initial_marking, self.final_marking)
         petrinet_visualizer.view(gviz)
         petrinet_visualizer.save(gviz,"inductive_miner.png")
+
+        self.draw_inductive_frequency(self.net, self.initial_marking, self.final_marking,self.event_data,"inductive_frequency_pn.png")
+        
         #print(self.net)
         #Heuristics Miner
         #from pm4py.algo.discovery.heuristics import algorithm as heuristics_miner
@@ -89,8 +92,8 @@ class Process:
     def generate(self, n=10000):
         '''n is number of patients'''
         #simulated_log = simulator.apply(self.net, self.initial_marking,self.final_marking, variant=simulator.Variants.BASIC_PLAYOUT, parameters={simulator.Variants.BASIC_PLAYOUT.value.Parameters.CASE_ID_KEY: n})
-        #simulated_log = simulator.apply(self.net, self.initial_marking,self.final_marking, variant=simulator.Variants.BASIC_PLAYOUT, parameters={simulator.Variants.BASIC_PLAYOUT.value.Parameters.NO_TRACES: n})
-        
+        simulated_log = simulator.apply(self.net, self.initial_marking,self.final_marking, variant=simulator.Variants.BASIC_PLAYOUT, parameters={simulator.Variants.BASIC_PLAYOUT.value.Parameters.NO_TRACES: n})
+        self.draw_inductive_frequency(self.net, self.initial_marking,self.final_marking,simulated_log,"simulated_inductive_frequency.png")
         
 
         # from pm4py.objects.process_tree import semantics
@@ -104,7 +107,7 @@ class Process:
         # simulated_log, res = montecarlo_simulation.apply(self.event_data, self.net, self.initial_marking,self.final_marking, parameters=parameters)
         log = self.event_data
         #log = xes_importer.apply(os.path.join("demo", "input_data", "running-example.xes"))
-        dfg = dfg_discovery.apply(log, variant=dfg_discovery.Variants.PERFORMANCE)
+        dfg = dfg_discovery.apply(log, variant=dfg_discovery.Variants.FREQUENCY)
 
         sa = start_activities.get_start_activities(log)
         ea = end_activities.get_end_activities(log)
@@ -129,7 +132,7 @@ class Process:
         #print(res["median_cases_ex_time"])
         print(res["total_cases_time"])
         net, initial_marking, final_marking = inductive_miner.apply(simulated_log)
-        self.draw_inductive_frequency(net, initial_marking, final_marking,simulated_log,"simulated_inductive_frequency.png")
+        self.draw_inductive_frequency(net, initial_marking, final_marking,simulated_log,"simulated_dfg_inductive_frequency.png")
         
         simulated_log = log_conversion.apply(simulated_log, variant=log_conversion.TO_DATA_FRAME)
         simulated_log = simulated_log.rename(columns={constants.CASE_CONCEPT_NAME:"id", xes_constants.DEFAULT_NAME_KEY:"event_type",
@@ -169,14 +172,14 @@ class Process:
         #foot print evaluate
         from pm4py.algo.discovery.footprints import algorithm as fp_discovery
         tree = inductive_miner.apply_tree(self.event_data)
-        # fp_simulation_data_log = fp_discovery.apply(log, variant=fp_discovery.Variants.ENTIRE_EVENT_LOG)
-        # fp_log = fp_discovery.apply(self.event_data, variant=fp_discovery.Variants.ENTIRE_EVENT_LOG)
-        # #fp_trace_trace = fp_discovery.apply(self.event_data, variant=fp_discovery.Variants.TRACE_BY_TRACE)
-        # #fp_tree = fp_discovery.apply(tree, variant=fp_discovery.Variants.PROCESS_TREE)
-        # from pm4py.visualization.footprints import visualizer as fp_visualizer
-        # gviz = fp_visualizer.apply(fp_log, fp_simulation_data_log, parameters={fp_visualizer.Variants.COMPARISON.value.Parameters.FORMAT: "png"})
-        # fp_visualizer.view(gviz)
-
+        fp_simulation_data_log = fp_discovery.apply(log, variant=fp_discovery.Variants.ENTIRE_EVENT_LOG)
+        fp_log = fp_discovery.apply(self.event_data, variant=fp_discovery.Variants.ENTIRE_EVENT_LOG)
+        #fp_trace_trace = fp_discovery.apply(self.event_data, variant=fp_discovery.Variants.TRACE_BY_TRACE)
+        #fp_tree = fp_discovery.apply(tree, variant=fp_discovery.Variants.PROCESS_TREE)
+        from pm4py.visualization.footprints import visualizer as fp_visualizer
+        gviz = fp_visualizer.apply(fp_log, fp_simulation_data_log, parameters={fp_visualizer.Variants.COMPARISON.value.Parameters.FORMAT: "png"})
+        fp_visualizer.view(gviz)
+        fp_visualizer.save(gviz,"matrix.png")
         # from pm4py.algo.conformance.footprints import algorithm as fp_conformance
 
         # conf_result = fp_conformance.apply(fp_log, fp_simulation_data_log, variant=fp_conformance.Variants.LOG_EXTENSIVE)
