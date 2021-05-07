@@ -61,7 +61,57 @@ Clinical events data can be seperated into two components:
 
 #### Event logs
 
-Event logs describing the clinical events transition and time interval. We can train process mining[4] models to capture the characteris from original data  
+##### Process Discovery
+
+Event logs describing the clinical events transition and time interval. We can train process mining[4] models to capture the characteris from original data.  
+
+Process Discovery algorithms want to find a suitable process model that describes the order of events/activities that are executed during a process execution.
+
+In the following, we made up an overview to visualize the advantages and disadvantages of the mining algorithms.
+
+| Alpha                                               | Alpha+                                              | Heuristic                        | Inductive                          |
+| --------------------------------------------------- | --------------------------------------------------- | -------------------------------- | ---------------------------------- |
+| Cannot handle loops of length one and length two    | Can handle loops of length one and length two       | Takes frequency into account     | Can handle invisible tasks         |
+| Invisible and duplicated tasks cannot be discovered | Invisible and duplicated tasks cannot be discovered | Detects short loops              | Model is sound                     |
+| Discovered model might not be sound                 | Discovered model might not be sound                 | Does not guarantee a sound model | Most used process mining algorithm |
+
+Clinical events have loops we choose **Inductive** miner algorithms.
+
+##### Process models structures
+
+###### Petri nets：
+
+Process models modeled using Petri nets have a well-defined semantic: a process execution starts from the places included in the initial marking and finishes at the places included in the final marking. 
+
+###### Directly-Follows Graphs：
+
+Directly-Follows Graphs, are introduced. Directly-Follows graphs are graphs where the nodes represent the events/activities in the log and directed edges are present between nodes if there is at least a trace in the log where the source event/activity is followed by the target event/activity. On top of these directed edges, it is easy to represent metrics like frequency (counting the number of times the source event/activity is followed by the target event/activity) and performance (some aggregation, for example, the mean, of time inter-lapsed between the two events/activities).
+
+###### Process tree:
+
+A process tree is a process model and a compact abstract representation of a block-structured workflow net: a rooted tree in which leaf nodes are labeled with activities, and all other nodes are labeled with operators (from now on called operator nodes). All nodes have a unique identifier to distinguish leaves having the same label. Furthermore, process trees are sound by definition, therefore, correctness of the process model is guaranteed.
+
+#### Simulation
+
+##### Playout of a Petri Net
+
+A playout of a Petri net takes as input a Petri net along with an initial marking, and returns a list of process executions that are allowed from the process model.
+
+##### Monte Carlo Simulation
+
+A time-related simulation permits to know how probable is that a process execution is terminated after a given amount of time. This leads to a better estimation of Service Level Agreements, or a better identification of the process instances that are most likely to have an high throughput time. All this starts from a performance DFG.
+
+#### Playout of a DFG
+
+A playout operation on a directly-follows graph is useful to retrieve the traces that are allowed from the directly-follows graph. In this case, a trace is a set of activities visited in the DFG from the start node to the end node. We can assign a probability to each trace (assuming that the DFG represents a Markov chain).
+
+#### Extensive Playout of a Process Tree
+
+An extensive playout operation permits to obtain entire path of the process model. Doing an extensive playout operation on a Petri net can be incredibly expensive. Process trees, with their bottom-up structure, permit to obtain the entire path of an event log in a much easier way
+
+### Process evaluation
+
+
 
 #### Event properties
 
