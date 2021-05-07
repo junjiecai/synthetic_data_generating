@@ -14,7 +14,7 @@ class Tabular:
         self.categorical_cols = categorical_cols or []
 
         self.data = self.pre_process(np.array(data))
-    
+
 
         self.columns = data.columns
         # 一维数据的个数
