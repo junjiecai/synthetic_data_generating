@@ -62,6 +62,8 @@ Clinical events data can be seperated into two components:
 
 #### Event logs
 
+Process mining includes **Play in**, **Play out**, and **Replay**. We discover the model through **Play in**, generate simulation data through the model and **Play out**, and check the data through **Replay**.
+
 ##### Process Discovery
 
 Event logs describing the clinical events transition and time interval. We can train process mining[4] models to capture the characteris from original data.  
