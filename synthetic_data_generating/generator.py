@@ -11,7 +11,8 @@ base_path = pathlib.Path(__file__).parent.absolute()
 # id for process
 
 class Generator:
-    def __init__(self, one_to_one_path, path_to_many_path):
+    def __init__(self, one_to_one_path, path_to_many_path, categorical_config=None):
+        self.categorical_config = categorical_config or {}
         self._one_to_one_data = self._load_data(one_to_one_path)
         self._one_to_many_data = self._load_data(path_to_many_path)
 
@@ -46,7 +47,7 @@ class Generator:
     # 
     def train(self):
         combined_tabular_data = self._combine_one_to_one_data().set_index('id')
-        self.tabular_generator = Tabular(combined_tabular_data)
+        self.tabular_generator = Tabular(combined_tabular_data, self.categorical_config.get('one_to_one'))
         self.tabular_generator.train(n_epochs=10)
     # 
         event_logs_data = self._combine_event_logs()
@@ -56,7 +57,7 @@ class Generator:
     # 
         self.properties_data_generators = {}
         for event, data in self._one_to_many_data.items():
-            generator = Tabular(data.drop(['id', 'time'], axis=1))
+            generator = Tabular(data.drop(['id', 'time'], axis=1), self.categorical_config.get('one_to_many',{}).get(event))
             generator.train(n_epochs=10)
             self.properties_data_generators[event] = generator
             print("Tabular generator for {} is trained".format(event))
@@ -95,6 +96,16 @@ class Generator:
 
 
 if __name__ == '__main__':
+    config = {
+        'one_to_one':'gender',
+        'one_to_many': {
+            'ELECTIVE_new':['diagnosis'],
+            'NEWBORN_new': ['diagnosis'],
+            'EMERGENCY_new': ['diagnosis'],
+            'URGENT_new': ['diagnosis'],
+        }
+    }
+
     g = Generator(join(base_path, 'one_to_one'), join(base_path, 'one_to_many'))
     g.train()
     a, b = g.generate(10)

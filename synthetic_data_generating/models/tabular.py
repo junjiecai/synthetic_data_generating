@@ -10,8 +10,12 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 # 在一个一维函数上训练一个生成对抗网络
 
 class Tabular:
-    def __init__(self, data):
-        self.data = np.array(data)
+    def __init__(self, data, categorical_cols=None):
+        self.categorical_cols = categorical_cols or []
+
+        self.data = self.pre_process(np.array(data))
+    
+
         self.columns = data.columns
         # 一维数据的个数
         self.n_inputs = self.data.shape[1]
@@ -129,7 +133,18 @@ class Tabular:
         x_fake, y_fake = self.generate_fake_samples(self.generator, self.latent_dim, size)
         df = pd.DataFrame(x_fake)
         df.columns = self.columns
+
+        df = self.post_process(df)
+
         return df
+
+    def pre_process(self, data):
+        return data
+
+    def post_process(self, data):
+        return data
+
+
 
     # dataFrame, js散度评估，只可以处理数值型
     def js_evaluate(self, data1, data2):
