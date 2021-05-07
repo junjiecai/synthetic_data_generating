@@ -1,13 +1,12 @@
 import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense
-import keras.backend as K
 import scipy.stats
 import pandas as pd
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-# 在一个一维函数上训练一个生成对抗网络
+# 在一个一维数据上训练一个生成对抗网络
 
 class Tabular:
     def __init__(self, data, categorical_cols=None):
@@ -24,9 +23,6 @@ class Tabular:
         self.discriminator = self.define_discriminator()
         self.generator = self.define_generator()
         self.gan_model = self.define_gan(self.discriminator, self.generator)
-
-    def wasserstein_loss(self, y_true, y_pred):
-        return K.mean(y_true * y_pred)
 
     # 定义独立的判别器模型
     def define_discriminator(self):
@@ -100,11 +96,8 @@ class Tabular:
         _, acc_fake = self.discriminator.evaluate(x_fake, y_fake, verbose=0)
         # 总结判别器性能
         print(epoch, acc_real, acc_fake)
-        # # 绘制真假数据的散点图
-        # pyplot.scatter(x_real[:, 0], x_real[:, 1], color='red')
-        # pyplot.scatter(x_fake[:, 0], x_fake[:, 1], color='blue')
-        # pyplot.show()
 
+    # 训练数据
     def train(self, n_epochs=10000, n_batch=128, n_eval=2000):
         # 用一半的 batch 数量来训练判别器
         half_batch = int(n_batch / 2)
@@ -128,6 +121,7 @@ class Tabular:
             if (i + 1) % n_eval == 0:
                 self.summarize_performance(i)
 
+    # 生成数据
     def generate(self, size=100):
         '''size can be list'''
         x_fake, y_fake = self.generate_fake_samples(self.generator, self.latent_dim, size)
@@ -138,6 +132,7 @@ class Tabular:
 
         return df
 
+    # 根据JS散度评估训练数据和生成数据的相似度
     def pre_process(self, data):
         return data
 
@@ -150,20 +145,19 @@ class Tabular:
     def js_evaluate(self, data1, data2):
         dataNp1 = np.array(data1)
         dataNp2 = np.array(data2)
-        return js_div(dataNp1.flatten(), dataNp2.flatten(), num_bins=20)
+        return self._js_div(dataNp1.flatten(), dataNp2.flatten(), num_bins=20)
 
+    def _js_divergence(self, p, q):
+        M = (p + q) / 2
+        return 0.5 * scipy.stats.entropy(p, M) + 0.5 * scipy.stats.entropy(q, M)
 
-def js_divergence(p, q):
-    M = (p+q)/2
-    return 0.5*scipy.stats.entropy(p, M)+0.5*scipy.stats.entropy(q, M)
-
-def js_div(arr1, arr2, num_bins):
-    max0 = max(np.max(arr1), np.max(arr2))
-    min0 = min(np.min(arr1), np.min(arr2))
-    bins = np.linspace(min0-1e-4, max0-1e-4, num=num_bins)
-    PDF1 = pd.cut(arr1, bins).value_counts() / len(arr1)
-    PDF2 = pd.cut(arr2, bins).value_counts() / len(arr2)
-    return js_divergence(PDF1.values, PDF2.values)
+    def _js_div(self, arr1, arr2, num_bins):
+        max0 = max(np.max(arr1), np.max(arr2))
+        min0 = min(np.min(arr1), np.min(arr2))
+        bins = np.linspace(min0 - 1e-4, max0 - 1e-4, num=num_bins)
+        PDF1 = pd.cut(arr1, bins).value_counts() / len(arr1)
+        PDF2 = pd.cut(arr2, bins).value_counts() / len(arr2)
+        return self._js_divergence(PDF1.values, PDF2.values)
 
 
 if __name__ == '__main__':
@@ -177,10 +171,11 @@ if __name__ == '__main__':
     X1 = X1.reshape(data_size, 1)
     X2 = X2.reshape(data_size, 1)
     X = np.hstack((X1, X2))
-    # print("X", X)
-    js = js_div(X1.flatten(), X.flatten(), num_bins=20)
-    print("js", js)
-    # print("js", js_div(X, X_pre, num_bins=10))
+
+    tabular = Tabular(X)
+    tabular.train()
+    print(tabular.generator())
+
 
 
 
