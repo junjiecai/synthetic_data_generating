@@ -11,10 +11,9 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 class Tabular:
     def __init__(self, data, categorical_cols=None):
         self.categorical_cols = categorical_cols or []
-
-        self.data = self.pre_process(np.array(data))
-
-
+        # 保存预处理后数据的类型
+        self.map = {}
+        self.data = self.pre_process(data)
         self.columns = data.columns
         # 一维数据的个数
         self.n_inputs = self.data.shape[1]
@@ -127,21 +126,38 @@ class Tabular:
         x_fake, y_fake = self.generate_fake_samples(self.generator, self.latent_dim, size)
         df = pd.DataFrame(x_fake)
         df.columns = self.columns
-
         df = self.post_process(df)
-
         return df
 
-    # 根据JS散度评估训练数据和生成数据的相似度
     def pre_process(self, data):
-        return data
+        copyData = pd.DataFrame(data)
+        for item in self.categorical_cols:
+            serice = copyData[item].value_counts()
+            a = np.array(copyData[item])
+            index = 0
+            value = {}
+            for key in serice.index:
+                a[a == key] = index
+                value[index] = key
+                index += 1
+            self.map[item] = value
+            copyData[item] = a
+        return np.array(copyData)
 
     def post_process(self, data):
+        for item in self.categorical_cols:
+            df = data.round({item: 0})
+            a = np.array(df[item])
+            a = a.astype('int')
+            a[a < 0] = 0
+            a[a >= len(self.map[item].items())] = len(self.map[item].items())-1
+            a = a.astype('str')
+            for key, value in self.map[item].items():
+                a[a == str(key)] = value
+            data[item] = a
         return data
 
-
-
-    # dataFrame, js散度评估，只可以处理数值型
+    # 根据JS散度评估训练数据和生成数据的相似度
     def js_evaluate(self, data1, data2):
         dataNp1 = np.array(data1)
         dataNp2 = np.array(data2)

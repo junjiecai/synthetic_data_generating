@@ -97,7 +97,7 @@ class Generator:
 
 if __name__ == '__main__':
     config = {
-        'one_to_one':'gender',
+        'one_to_one':['gender'],
         'one_to_many': {
             'ELECTIVE_new':['diagnosis'],
             'NEWBORN_new': ['diagnosis'],
@@ -106,7 +106,7 @@ if __name__ == '__main__':
         }
     }
 
-    g = Generator(join(base_path, 'one_to_one'), join(base_path, 'one_to_many'))
+    g = Generator(join(base_path, 'one_to_one'), join(base_path, 'one_to_many'), config)
     g.train()
     a, b = g.generate(10)
     print(1)
