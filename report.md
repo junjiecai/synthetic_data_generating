@@ -52,6 +52,7 @@ Data for patients can be divived into two primary categories.
 * All 1 to 1 static patient data can br combined into one tabular formed dataset. We can learning a model from it with GAN and generate new records keeping joint distribution from the original data,  
 * The one-dimensional data generation confrontation network of GAN is realized through Keras. According to the given training data, by learning the distribution model of the training data, a large amount of data of the same distribution can be generated,The customs clearance GAN network generates float type data, which needs to be changed according to the original data type. Part of the float type data is converted to int type, and the training data and the generated data are consistent.  
 * The similarity between the generated data and the training data can be evaluated through js divergence. The value is between 0 and 1, and the exact same calculation result is 0. There are int type data and float type data in the training data.  
+* For the generation of category data, data pre-processing and post-processing are required. For example, A, B, and C need to be converted into 1, 2, and 3 first, and then trained with GAN to convert the generated data into A, B and C according to Mapping relations
 
 ![image](gan_network.png)
 

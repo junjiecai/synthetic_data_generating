@@ -129,6 +129,7 @@ class Tabular:
         df = self.post_process(df)
         return df
 
+    # 数据预处理，需要将类别数据转换为数值数据
     def pre_process(self, data):
         copyData = pd.DataFrame(data)
         for item in self.categorical_cols:
@@ -144,6 +145,7 @@ class Tabular:
             copyData[item] = a
         return np.array(copyData)
 
+    # 数据后处理，需要将数据数据转换为类别数据，根据之前的数据对应关系
     def post_process(self, data):
         for item in self.categorical_cols:
             df = data.round({item: 0})
