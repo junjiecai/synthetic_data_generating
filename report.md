@@ -52,7 +52,6 @@ Data for patients can be divived into two primary categories.
 * All 1 to 1 static patient data can br combined into one tabular formed dataset. We can learning a model from it with GAN and generate new records keeping joint distribution from the original data,  
 * The one-dimensional data generation confrontation network of GAN is realized through Keras. According to the given training data, by learning the distribution model of the training data, a large amount of data of the same distribution can be generated,The customs clearance GAN network generates float type data, which needs to be changed according to the original data type. Part of the float type data is converted to int type, and the training data and the generated data are consistent.  
 * The similarity between the generated data and the training data can be evaluated through js divergence. The value is between 0 and 1, and the exact same calculation result is 0. There are int type data and float type data in the training data.  
-* For the generation of category data, data pre-processing and post-processing are required. For example, A, B, and C need to be converted into 1, 2, and 3 first, and then trained with GAN to convert the generated data into A, B and C according to Mapping relations
 
 ![image](gan_network.png)
 
@@ -84,9 +83,21 @@ Clinical events have loops we choose **Inductive** miner algorithms.
 
 Process models modeled using Petri nets have a well-defined semantic: a process execution starts from the places included in the initial marking and finishes at the places included in the final marking. 
 
+![inductive_frequency_pn](inductive_frequency_pn.png)
+
+Petri nets Include frequency 
+
 ###### Directly-Follows Graphs：
 
-Directly-Follows Graphs, are introduced. Directly-Follows graphs are graphs where the nodes represent the events/activities in the log and directed edges are present between nodes if there is at least a trace in the log where the source event/activity is followed by the target event/activity. On top of these directed edges, it is easy to represent metrics like frequency (counting the number of times the source event/activity is followed by the target event/activity) and performance (some aggregation, for example, the mean, of time inter-lapsed between the two events/activities).
+Directly-Follows Graphs, are introduced. Directly-Follows graphs are graphs where the nodes represent the events/activities in the log and directed edges are present between nodes if there is at least a trace in the log where the source event/activity is followed by the target event/activity. On top of these directed edges, it is easy to represent metrics like frequency and performance
+
+![DFG_PERFORMANCE](DFG_PERFORMANCE.png
+
+![DFG_FREQUENCY](DFG_FREQUENCY.png)
+
+​										frequency DFG
+
+![inductive_frequency](inductive_frequency.png)
 
 ###### Process tree:
 
@@ -98,19 +109,31 @@ A process tree is a process model and a compact abstract representation of a blo
 
 A playout of a Petri net takes as input a Petri net along with an initial marking, and returns a list of process executions that are allowed from the process model.
 
+![simulated_inductive_frequency_pn_out](simulated_inductive_frequency_pn_out.png)
+
 ##### Monte Carlo Simulation
 
 A time-related simulation permits to know how probable is that a process execution is terminated after a given amount of time. This leads to a better estimation of Service Level Agreements, or a better identification of the process instances that are most likely to have an high throughput time. All this starts from a performance DFG.
 
+
+
 #### Playout of a DFG
 
 A playout operation on a directly-follows graph is useful to retrieve the traces that are allowed from the directly-follows graph. In this case, a trace is a set of activities visited in the DFG from the start node to the end node. We can assign a probability to each trace (assuming that the DFG represents a Markov chain).
+
+![simulated_inductive_frequency](simulated_inductive_frequency.png)
 
 #### Extensive Playout of a Process Tree
 
 An extensive playout operation permits to obtain entire path of the process model. Doing an extensive playout operation on a Petri net can be incredibly expensive. Process trees, with their bottom-up structure, permit to obtain the entire path of an event log in a much easier way
 
 ### Process evaluation
+
+|         algorithms         | precision | fitness |
+| :------------------------: | :-------: | :-----: |
+| Alpha(Cannot handle loops) |    --     |   --    |
+|         Heuristic          |           |         |
+|         Inductive          |           |         |
 
 
 
