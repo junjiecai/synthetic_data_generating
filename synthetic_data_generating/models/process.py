@@ -26,7 +26,7 @@ from pm4py.visualization.dfg import visualizer as dfg_visualizer
 from pm4py.statistics.start_activities.log import get as start_activities
 from pm4py.statistics.end_activities.log import get as end_activities
 import os
-_debug = 1
+_debug = 0
 class Process:
     def __init__(self, event_data):
         self.file = open("log/log.txt","a+")
@@ -45,7 +45,7 @@ class Process:
             tree = inductive_miner.apply_tree(self.event_data)
             gviz = pt_visualizer.apply(tree)
             pt_visualizer.save(gviz,"image/process_tree.png")
-            
+
         self.dfg = dfg_discovery.apply(self.event_data, variant=dfg_discovery.Variants.FREQUENCY)
         
         #gviz = dfg_visualizer.apply(self.dfg,variant=dfg_visualizer.Variants.FREQUENCY)
