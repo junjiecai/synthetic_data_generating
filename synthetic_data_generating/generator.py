@@ -84,7 +84,7 @@ class Generator:
         generated_tabular_data = self.split_tabular_data(generated_combined_tabular_data)
 
         event_logs = self.event_log_generator.generate(n)
-
+        self.event_log_generator.close()
         event_property_data = {}
         for event, generator in self.properties_data_generators.items():
             record_n = (event_logs['event_type'] == event).sum()

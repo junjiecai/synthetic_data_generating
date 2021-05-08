@@ -26,7 +26,7 @@ from pm4py.visualization.dfg import visualizer as dfg_visualizer
 from pm4py.statistics.start_activities.log import get as start_activities
 from pm4py.statistics.end_activities.log import get as end_activities
 import os
-
+_debug = 1
 class Process:
     def __init__(self, event_data):
         self.file = open("log/log.txt","a+")
@@ -83,9 +83,10 @@ class Process:
     def generate(self, n=10000):
         '''n is number of patients'''
         #simulated_log = simulator.apply(self.net, self.initial_marking,self.final_marking, variant=simulator.Variants.BASIC_PLAYOUT, parameters={simulator.Variants.BASIC_PLAYOUT.value.Parameters.CASE_ID_KEY: n})
-        simulated_log = simulator.apply(self.net, self.initial_marking,self.final_marking, variant=simulator.Variants.BASIC_PLAYOUT, parameters={simulator.Variants.BASIC_PLAYOUT.value.Parameters.NO_TRACES: n})
-        self.draw_inductive_frequency(self.net, self.initial_marking,self.final_marking,simulated_log,"image/simulated_inductive_frequency.png")
-        self.foot_print(simulated_log)
+        if _debug:
+            simulated_log = simulator.apply(self.net, self.initial_marking,self.final_marking, variant=simulator.Variants.BASIC_PLAYOUT, parameters={simulator.Variants.BASIC_PLAYOUT.value.Parameters.NO_TRACES: n})
+            self.draw_inductive_frequency(self.net, self.initial_marking,self.final_marking,simulated_log,"image/simulated_inductive_frequency.png")
+            self.foot_print_evaluate(simulated_log)
 
         # from pm4py.objects.process_tree import semantics
         # simulated_log = semantics.generate_log(self.tree, no_traces=100)
@@ -118,7 +119,7 @@ class Process:
         print(res["total_cases_time"])
         net, initial_marking, final_marking = inductive_miner.apply(simulated_log)
         self.draw_inductive_frequency(net, initial_marking, final_marking,simulated_log,"image/simulated_dfg_inductive_frequency.png")
-        self.foot_print(simulated_log)
+        self.foot_print_evaluate(simulated_log)
 
         simulated_log = log_conversion.apply(simulated_log, variant=log_conversion.TO_DATA_FRAME)
         simulated_log = simulated_log.rename(columns={constants.CASE_CONCEPT_NAME:"id", xes_constants.DEFAULT_NAME_KEY:"event_type",
@@ -149,12 +150,12 @@ class Process:
         fitness = replay_fitness_evaluator.apply(log, self.net, self.initial_marking, self.final_marking, variant=replay_fitness_evaluator.Variants.TOKEN_BASED)
         self.file.write("fitness:{}\n".format(fitness))
 
-    def foot_print_dataframe(self, df_log):
+    def foot_print_evaluate_dataframe(self, df_log):
         df = pm4py.format_dataframe(df_log, case_id='id', activity_key='event_type', timestamp_key='time')
         df =log_conversion.apply(df, variant=log_conversion.TO_EVENT_LOG)
-        self.foot_print(df)
+        self.foot_print_evaluate(df)
 
-    def foot_print(self,log):
+    def foot_print_evaluate(self,log):
         #foot print evaluate
         from pm4py.algo.discovery.footprints import algorithm as fp_discovery
         tree = inductive_miner.apply_tree(self.event_data)
@@ -204,116 +205,7 @@ class Process:
         self.file.write("simulation:{}\n".format(language))
         #end Earth Mover Distance
         self.file.flush()
-
-if __name__ == "__main__":
-    #event_data = importCSV("running-example.csv")
-    #importExportCSVtoXES("event_e.csv","event_e.xes")
-    #print(os.path.abspath(os.path.join( "tests", "input_data", "running-example.xes")))
-
-    event_data =xes_importer.apply(os.path.join("tests", "input_data", "event_e.xes"))
-
-    pm = Process(event_data)
-    pm.train()
-    simulation_data=pm.generate(1000)
     
-    pm.evaluate(simulation_data)
-    pm.foot_print(simulation_data)
+    def close(self):
+        self.file.close()
 
-    # #from pm4py.objects.log.util import get_log_representation
-    # #data, feature_names = get_log_representation.get_default_representation(simulation_data)
-    # #print(feature_names)
-    # from pm4py.objects.log.util import get_log_representation
-    # str_trace_attributes = ["name"]
-    # str_event_attributes = ["concept:name"]
-    # num_trace_attributes = []
-    # num_event_attributes = []
-    # import pandas as pd
-    # from sklearn.decomposition import PCA
-    # data, feature_names = get_log_representation.get_representation(
-    #                         simulation_data, str_trace_attributes, str_event_attributes,
-    #                         num_trace_attributes, num_event_attributes)
-    # df = pd.DataFrame(data, columns=feature_names)
-    # print(df)
-    # simulation_data=event_data
-    # data, feature_names = get_log_representation.get_representation(
-    #                         simulation_data, str_trace_attributes, str_event_attributes,
-    #                         num_trace_attributes, num_event_attributes)
-    # df = pd.DataFrame(data, columns=feature_names)
-    # #pca = PCA(n_components=5)
-    # #df2 = pd.DataFrame(pca.fit_transform(df))
-    # print(df)
-    
-    # from pm4py.objects.log.util import get_class_representation
-    # target, classes = get_class_representation.get_class_representation_by_str_ev_attr_value_value(simulation_data, "concept:name")
-    
-    # from sklearn import tree
-    # clf = tree.DecisionTreeClassifier()
-    # clf.fit(data, target)
-
-    # from pm4py.visualization.decisiontree import visualizer as dectree_visualizer
-    # gviz = dectree_visualizer.apply(clf, feature_names, classes)
-    # dectree_visualizer.view(gviz)
-
-    # net, im, fm = inductive_miner.apply(event_data)
-    # from pm4py.algo.discovery.footprints import algorithm as footprints_discovery
-    # fp_log = footprints_discovery.apply(event_data, variant=footprints_discovery.Variants.ENTIRE_EVENT_LOG)
-    # print(fp_log)
-
-    # fp_trace_by_trace = footprints_discovery.apply(event_data, variant=footprints_discovery.Variants.TRACE_BY_TRACE)
-    # print("===============================")
-    # print(fp_trace_by_trace)
-    # fp_net = footprints_discovery.apply(net, im, fm)
-    # from pm4py.visualization.footprints import visualizer as fp_visualizer
-
-    # gviz = fp_visualizer.apply(fp_log, fp_net, parameters={fp_visualizer.Variants.COMPARISON.value.Parameters.FORMAT: "png"})
-    # fp_visualizer.view(gviz)
-
-
-    # from copy import deepcopy
-    # from pm4py.algo.filtering.log.variants import variants_filter
-
-    # log = xes_importer.apply(os.path.join("tests", "input_data", "running-example.xes"))
-    # fp_log = footprints_discovery.apply(log, variant=footprints_discovery.Variants.ENTIRE_EVENT_LOG)
-    # filtered_log = variants_filter.apply_auto_filter(deepcopy(log))
-
-    # net, im, fm = inductive_miner.apply(filtered_log)
-    # fp_net = footprints_discovery.apply(net, im, fm)
-
-    # gviz = fp_visualizer.apply(fp_log, fp_net, parameters={fp_visualizer.Variants.COMPARISON.value.Parameters.FORMAT: "png"})
-    # fp_visualizer.view(gviz)
-    
-    # from pm4py.algo.conformance.footprints import algorithm as footprints_conformance
-    # conf_fp = footprints_conformance.apply(fp_trace_by_trace, fp_net)
-    # print(conf_fp)
-
-
-    # log = xes_importer.apply(os.path.join("tests", "input_data", "running-example.xes"))
-    # tree = inductive_miner.apply_tree(log)
-
-
-    # from pm4py.visualization.footprints import visualizer as fp_visualizer
-
-    # gviz = fp_visualizer.apply(fp_net, parameters={fp_visualizer.Variants.SINGLE.value.Parameters.FORMAT: "png"})
-    # fp_visualizer.view(gviz)
-    
-    #print(simulation_data)
-    #xes_exporter.apply(simulation_data, os.path.join("tests", "input_data",  "simulation_event_e.xes"))
-    
-    #pm.evaluate(pm.event_data)
-    
-    
-    
-    #log = xes_importer.apply("tests/input_data/running-example.xes")
-    #from pm4py.algo.discovery.dfg import algorithm as dfg_discovery
-    #from pm4py.visualization.dfg import visualizer as dfg_visualization
-#
-    #dfg = dfg_discovery.apply(log, variant=dfg_discovery.Variants.PERFORMANCE)
-    #gviz = dfg_visualization.apply(dfg, log=log, variant=dfg_visualization.Variants.PERFORMANCE)
-    #dfg_visualization.view(gviz)
-    #simulator.apply()
-    #from pm4py.algo.discovery.inductive import algorithm as inductive_miner
-    #net, im, fm = inductive_miner.apply(log)
-    #from pm4py.visualization.petrinet import visualizer
-    #gviz = visualizer.apply(net, im, fm, parameters={visualizer.Variants.WO_DECORATION.value.Parameters.DEBUG: True})
-    #visualizer.view(gviz)
-                                
