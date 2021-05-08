@@ -1,4 +1,4 @@
-from synthetic_data_generating.models import Process, Tabular
+from models import Process, Tabular
 import os
 from pandas import DataFrame
 from os.path import join
@@ -46,21 +46,21 @@ class Generator:
     # 
     # 
     def train(self):
-        combined_tabular_data = self._combine_one_to_one_data().set_index('id')
-        self.tabular_generator = Tabular(combined_tabular_data, self.categorical_config.get('one_to_one'))
-        self.tabular_generator.train()
+        #combined_tabular_data = self._combine_one_to_one_data().set_index('id')
+        #self.tabular_generator = Tabular(combined_tabular_data, self.categorical_config.get('one_to_one'))
+        #self.tabular_generator.train()
     # 
         event_logs_data = self._combine_event_logs()
         event_log_generator = Process(event_logs_data)
         event_log_generator.train()
         self.event_log_generator = event_log_generator
     # 
-        self.properties_data_generators = {}
-        for event, data in self._one_to_many_data.items():
-            generator = Tabular(data.drop(['id', 'time'], axis=1), self.categorical_config.get('one_to_many', {}).get(event))
-            generator.train()
-            self.properties_data_generators[event] = generator
-            print("Tabular generator for {} is trained".format(event))
+        # self.properties_data_generators = {}
+        # for event, data in self._one_to_many_data.items():
+        #     generator = Tabular(data.drop(['id', 'time'], axis=1), self.categorical_config.get('one_to_many', {}).get(event))
+        #     generator.train()
+        #     self.properties_data_generators[event] = generator
+        #     print("Tabular generator for {} is trained".format(event))
 
     def split_tabular_data(self, generated_combined_tabular_data):
         new_data = {}
@@ -79,11 +79,12 @@ class Generator:
         return new_data
 
     def generate(self, n=100):
+        event_logs = self.event_log_generator.generate(n)
         generated_combined_tabular_data = self.tabular_generator.generate(n)
         generated_combined_tabular_data['id'] = list(range(n))
         generated_tabular_data = self.split_tabular_data(generated_combined_tabular_data)
 
-        event_logs = self.event_log_generator.generate(n)
+        
 
         event_property_data = {}
         for event, generator in self.properties_data_generators.items():
