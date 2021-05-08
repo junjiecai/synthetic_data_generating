@@ -194,6 +194,9 @@ Given event type, event properties can be combined into one tabular data table a
 
 ![image](image/plan.jpg)  
 
+# code
+[https://github.com/junjiecai/synthetic_data_generating.git](https://github.com/junjiecai/synthetic_data_generating.git)
+
 # Reference
 
 1. Tucker, A., Wang, Z., Rotalinti, Y. and Myles, P., 2020. Generating high-fidelity synthetic patient data for assessing machine learning healthcare software. NPJ digital medicine, 3(1), pp.1-13.  
