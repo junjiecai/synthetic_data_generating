@@ -39,27 +39,13 @@ class Process:
 
     def train(self):
         #Alpha Miner
-        
-        self.net, self.initial_marking, self.final_marking = inductive_miner.apply(self.event_data)
-        self.draw_inductive_frequency(self.net, self.initial_marking, self.final_marking,self.event_data,"image/inductive_frequency_pn.png")
-        
-        #print(self.net)
-        #Heuristics Miner
-        #from pm4py.algo.discovery.heuristics import algorithm as heuristics_miner
-        #
-        #
-        #
-        #self.tree = inductive_miner.apply_tree(self.event_data)
-        tree = inductive_miner.apply_tree(self.event_data)
-        gviz = pt_visualizer.apply(tree)
-        pt_visualizer.save(gviz,"image/process_tree.png")
-        
-        #self.net, self.initial_marking, self.final_marking=inductive_miner.apply(self.event_data)
-        
-        #from pm4py.objects.conversion.process_tree import converter as pt_converter
-        #self.net, self.initial_marking, self.final_marking = pt_converter.apply(self.tree, variant=pt_converter.Variants.TO_PETRI_NET)
-
-
+        if _debug:
+            self.net, self.initial_marking, self.final_marking = inductive_miner.apply(self.event_data)
+            self.draw_inductive_frequency(self.net, self.initial_marking, self.final_marking,self.event_data,"image/inductive_frequency_pn.png")
+            tree = inductive_miner.apply_tree(self.event_data)
+            gviz = pt_visualizer.apply(tree)
+            pt_visualizer.save(gviz,"image/process_tree.png")
+            
         self.dfg = dfg_discovery.apply(self.event_data, variant=dfg_discovery.Variants.FREQUENCY)
         
         #gviz = dfg_visualizer.apply(self.dfg,variant=dfg_visualizer.Variants.FREQUENCY)
